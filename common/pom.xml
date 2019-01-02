@@ -10,24 +10,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>com.tank</groupId>
-    <artifactId>canalClient</artifactId>
+    <artifactId>common</artifactId>
     <version>1.0</version>
-    <name>canalClient</name>
-
+    <name>common</name>
     <url>http://maven.apache.org</url>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.tank</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.otter</groupId>
-            <artifactId>canal.client</artifactId>
-            <version>${canal-version}</version>
-        </dependency>
-
-    </dependencies>
 
 </project>

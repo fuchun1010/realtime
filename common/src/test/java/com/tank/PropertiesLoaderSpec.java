@@ -1,5 +1,6 @@
-package com.tank.util;
+package com.tank;
 
+import com.tank.util.PropertiesLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -2,3 +2,5 @@ realtime.iml
 .idea/
 canalClient/target
 canalClient/canalClient.iml
+common/common.iml
+common/target/
