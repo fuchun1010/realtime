@@ -4,3 +4,5 @@ canalClient/target
 canalClient/canalClient.iml
 common/common.iml
 common/target/
+kafka/kafka.iml
+kafka/target/
