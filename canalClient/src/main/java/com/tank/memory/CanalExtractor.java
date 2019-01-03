@@ -9,6 +9,8 @@ import com.alibaba.otter.canal.protocol.CanalEntry.RowChange;
 import com.alibaba.otter.canal.protocol.Message;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import com.tank.KafkaObserver;
+import com.tank.sink.CrudRecord;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
@@ -35,7 +37,13 @@ public class CanalExtractor implements Runnable {
     this.canalConnector.connect();
     this.canalConnector.subscribe(this.destination + "\\..*");
     this.canalConnector.rollback();
+
+    // register all consumer type: kafka,redis and so on
+    CrudRecord crudRecord = new CrudRecord();
+    crudRecord.addObserver(new KafkaObserver());
+
     while (isRunning) {
+
       final Message message = this.canalConnector.getWithoutAck(200);
       final long batchId = message.getId();
       final List<Entry> canalMessages = message.getEntries();
@@ -44,7 +52,7 @@ public class CanalExtractor implements Runnable {
         continue;
       } else {
         try {
-          handleMessage(canalMessages);
+          handleMessage(canalMessages, crudRecord);
           this.canalConnector.ack(batchId);
         } catch (InvalidProtocolBufferException e) {
           e.printStackTrace();
@@ -54,7 +62,7 @@ public class CanalExtractor implements Runnable {
     }
   }
 
-  private void handleMessage(@Nonnull final List<Entry> canalMessages) throws InvalidProtocolBufferException {
+  private void handleMessage(@Nonnull final List<Entry> canalMessages, CrudRecord crudRecord) throws InvalidProtocolBufferException {
     for (Entry entry : canalMessages) {
       final String typeName = entry.getHeader().getEventType().name().toLowerCase();
       final String tableName = entry.getHeader().getTableName();
@@ -65,20 +73,21 @@ public class CanalExtractor implements Runnable {
         continue;
       }
 
+      crudRecord.changeData("hello" + System.currentTimeMillis());
+
       RowChange rowChange = RowChange.parseFrom(entry.getStoreValue());
       EventType eventType = rowChange.getEventType();
 
       final String jsonStr = JsonFormat.printer().print(entry.getHeader());
 
-      log.info("header---->" + jsonStr);
 
       for (CanalEntry.RowData row : rowChange.getRowDatasList()) {
 
         if (eventType == EventType.DELETE) {
-          log.info("delete");
+          //log.info("delete");
         } else if (eventType == EventType.UPDATE) {
           final String updateJson = JsonFormat.printer().print(rowChange);
-          log.info("update----->" + updateJson);
+          //log.info("update----->" + updateJson);
 
         } else if (eventType == EventType.INSERT) {
 

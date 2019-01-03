@@ -17,6 +17,13 @@
     <url>http://maven.apache.org</url>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.tank</groupId>
+            <artifactId>kafka</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.tank</groupId>
             <artifactId>common</artifactId>
@@ -32,6 +39,7 @@
             <artifactId>protobuf-java-util</artifactId>
             <version>3.6.1</version>
         </dependency>
+
 
     </dependencies>
 

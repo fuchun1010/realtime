@@ -15,13 +15,4 @@
     <name>kafka</name>
     <url>http://maven.apache.org</url>
 
-
-    <dependencies>
-        <dependency>
-            <groupId>com.tank</groupId>
-            <artifactId>canalClient</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
-    
 </project>
