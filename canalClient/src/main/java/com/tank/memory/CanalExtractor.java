@@ -8,6 +8,8 @@ import com.alibaba.otter.canal.protocol.CanalEntry.EventType;
 import com.alibaba.otter.canal.protocol.CanalEntry.RowChange;
 import com.alibaba.otter.canal.protocol.Message;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
@@ -17,18 +19,21 @@ import java.util.Objects;
 /**
  * @author fuchun
  */
+@Slf4j
 public class CanalExtractor implements Runnable {
 
   public CanalExtractor(@Nonnull final String ip, final String destination) {
     final int port = 11111;
+    this.destination = destination;
     final InetSocketAddress socketAddress = new InetSocketAddress(ip, port);
     this.canalConnector = CanalConnectors.newSingleConnector(socketAddress, destination, "canal", "canal");
+    log.info("*********canal start listen mysql crud*********");
   }
 
   @Override
   public void run() {
     this.canalConnector.connect();
-    this.canalConnector.subscribe(".*\\..*");
+    this.canalConnector.subscribe(this.destination + "\\..*");
     this.canalConnector.rollback();
     while (isRunning) {
       final Message message = this.canalConnector.getWithoutAck(200);
@@ -53,33 +58,37 @@ public class CanalExtractor implements Runnable {
     for (Entry entry : canalMessages) {
       final String typeName = entry.getHeader().getEventType().name().toLowerCase();
       final String tableName = entry.getHeader().getTableName();
-      System.out.println("tableName---->" + tableName);
 
       if (entry.getEntryType() == CanalEntry.EntryType.TRANSACTIONBEGIN
           || entry.getEntryType() == CanalEntry.EntryType.TRANSACTIONEND
           || "query".equalsIgnoreCase(typeName)) {
         continue;
       }
+
       RowChange rowChange = RowChange.parseFrom(entry.getStoreValue());
       EventType eventType = rowChange.getEventType();
 
-      for (CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
+      final String jsonStr = JsonFormat.printer().print(entry.getHeader());
+
+      log.info("header---->" + jsonStr);
+
+      for (CanalEntry.RowData row : rowChange.getRowDatasList()) {
 
         if (eventType == EventType.DELETE) {
-          System.out.println("delete");
+          log.info("delete");
         } else if (eventType == EventType.UPDATE) {
-          System.out.println("update");
+          final String updateJson = JsonFormat.printer().print(rowChange);
+          log.info("update----->" + updateJson);
 
         } else if (eventType == EventType.INSERT) {
+
 //          List<Column> columns = rowData.getAfterColumnsList();
 //          for (Column column : columns) {
 //            String fieldName = column.getName();
 //            String value = column.getValue();
 //            String fieldType = column.getMysqlType();
 //          }
-          System.out.println("insert");
-        } else if (eventType == EventType.UPDATE) {
-          System.out.println("update");
+
         }
 
       }
@@ -99,6 +108,8 @@ public class CanalExtractor implements Runnable {
   private CanalConnector canalConnector = null;
 
   private volatile boolean isRunning = true;
+
+  private String destination;
 
 
 }
