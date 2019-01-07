@@ -19,7 +19,7 @@ public class CanalClient {
     final PropertiesLoader propertiesLoader = PropertiesLoader.createInstance();
     final Map<String, String> config = propertiesLoader.loadConfig("mysql.properties");
     final CanalExtractor canalExtractor = new CanalExtractor(config.get("server_address"), config.get("target_db"));
-    config.clear();
+
     final ExecutorService service = Executors.newSingleThreadExecutor();
     service.execute(canalExtractor);
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {

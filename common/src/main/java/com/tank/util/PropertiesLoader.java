@@ -27,6 +27,9 @@ public class PropertiesLoader {
    */
   public Map<String, String> loadConfig(final String fileName) throws Exception {
     Objects.requireNonNull(fileName);
+    if (fileName.length() == 0) {
+      throw new RuntimeException("file name is empty");
+    }
     final Map<String, String> config = Maps.newConcurrentMap();
     final String rootPath = System.getProperty("user.dir");
     final String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
@@ -34,7 +37,7 @@ public class PropertiesLoader {
     if (!file.exists()) {
       throw new NoSuchElementException(fileName + " not exists");
     }
-    try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(targetPath))) {
+    try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
       final Properties props = new Properties();
       props.load(in);
       final Enumeration<String> keys = (Enumeration<String>) props.propertyNames();

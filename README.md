@@ -68,3 +68,50 @@
 }
 
 ```
+
+
+#### 统一json
+```asciidoc
+{
+  "op": "insert",
+  "db": "demo2",
+  "tableName": "tableName",
+  "schema": [
+    {
+      "index": 0,
+      "name": "id",
+      "pk": true,
+      "fieldType": "int"
+    },
+    {
+      "index": 1,
+      "name": "_name",
+      "pk": false,
+      "value": "a",
+      "fieldType": "varchar(50)"
+    },
+    {
+      "index": 2,
+      "name": "price",
+      "pk": false,
+      "fieldType": "numeric(10,2)"
+    }
+  ],
+  "data": [
+    {
+      "index": 0,
+      "name": "id",
+      "value": "4"
+    }, {
+      "index": 1,
+      "name": "_name",
+      "value": "a"
+    }, {
+      "index": 2,
+      "name": "price",
+      "value": "620.0"
+    }  
+    
+  ]
+}
+```
