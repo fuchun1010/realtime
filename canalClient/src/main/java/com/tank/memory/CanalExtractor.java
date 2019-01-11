@@ -29,13 +29,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CanalExtractor implements Runnable {
 
-  public CanalExtractor(@Nonnull final String ip, final String destination) {
+  public CanalExtractor(@Nonnull final String ip, final String destination, final String username, final String password) {
     final int port = 11111;
     this.destination = destination;
     final InetSocketAddress socketAddress = new InetSocketAddress(ip, port);
-    this.canalConnector = CanalConnectors.newSingleConnector(socketAddress, destination, "canal", "canal");
-    log.info("*********canal start listen mysql crud*********");
+    this.canalConnector = CanalConnectors.newSingleConnector(socketAddress, destination, username, password);
+    log.info("*********single canal start listen mysql crud*********");
   }
+
 
   @Override
   public void run() {
