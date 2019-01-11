@@ -8,7 +8,6 @@ import com.alibaba.otter.canal.protocol.CanalEntry.EventType;
 import com.alibaba.otter.canal.protocol.CanalEntry.RowChange;
 import com.alibaba.otter.canal.protocol.Message;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import com.tank.KafkaObserver;
 import com.tank.domain.DbRecord;
 import com.tank.domain.Field;
@@ -76,12 +75,12 @@ public class CanalExtractor implements Runnable {
     }
   }
 
-  private void handleMessage(@Nonnull final List<Entry> canalMessages, CrudRecord crudRecord) throws InvalidProtocolBufferException {
+  private void handleMessage(@Nonnull final List<Entry> canalMessages, final CrudRecord crudRecord) throws InvalidProtocolBufferException {
+    Objects.requireNonNull(crudRecord);
     for (Entry entry : canalMessages) {
       final CanalEntry.Header header = entry.getHeader();
       final String typeName = header.getEventType().name().toLowerCase();
       final String tableName = header.getTableName();
-
 
       if (entry.getEntryType() == CanalEntry.EntryType.TRANSACTIONBEGIN
           || entry.getEntryType() == CanalEntry.EntryType.TRANSACTIONEND
@@ -89,47 +88,35 @@ public class CanalExtractor implements Runnable {
         continue;
       }
 
-
       RowChange rowChange = RowChange.parseFrom(entry.getStoreValue());
       EventType eventType = rowChange.getEventType();
+//      final String jsonStr = JsonFormat.printer().print(entry.getHeader());
 
-      final String jsonStr = JsonFormat.printer().print(entry.getHeader());
+      List<CanalEntry.Column> columns = null;
+      List<Field> fields = null;
+      List<FieldItem> data = null;
 
       for (CanalEntry.RowData row : rowChange.getRowDatasList()) {
+
         final DbRecord dbRecord = new DbRecord();
         dbRecord.setDb(header.getSchemaName());
         dbRecord.setTableName(tableName);
 
-
         if (eventType == EventType.DELETE) {
           dbRecord.setOp("delete");
-        } else if (eventType == EventType.UPDATE) {
-          dbRecord.setOp("update");
-        } else if (eventType == EventType.INSERT) {
-
-          dbRecord.setOp("insert");
-
-          final List<CanalEntry.Column> columns = row.getAfterColumnsList();
-
-          List<Field> fields = columns.stream().map(column -> {
-            final int index = column.getIndex();
-            final String fieldType = column.getMysqlType();
-            final String name = column.getName();
-            final boolean pk = column.getIsKey();
-            Field field = new Field();
-            return field.setFieldType(fieldType).setPk(pk).setIndex(index).setName(name);
-          }).collect(Collectors.toList());
-
-          dbRecord.getSchema().setFields(fields);
-
-          List<FieldItem> data = columns.stream().map(column -> {
-            final int index = column.getIndex();
-            final String value = column.getValue();
-            final String name = column.getName();
-            return new FieldItem().setIndex(index).setName(name).setValue(value);
-          }).collect(Collectors.toList());
-          dbRecord.setData(data);
+          columns = row.getBeforeColumnsList();
+        } else {
+          if (eventType == EventType.UPDATE) {
+            dbRecord.setOp("update");
+          } else {
+            dbRecord.setOp("insert");
+          }
+          columns = row.getAfterColumnsList();
         }
+        fields = this.convert2Fields(columns);
+        data = this.convert2Data(columns);
+        dbRecord.getSchema().setFields(fields);
+        dbRecord.setData(data);
 
         // notify all observers
         crudRecord.changeData(dbRecord);
@@ -149,6 +136,26 @@ public class CanalExtractor implements Runnable {
     if (Objects.nonNull(this.kafkaObserver)) {
       this.kafkaObserver.close();
     }
+  }
+
+  private List<Field> convert2Fields(final List<CanalEntry.Column> columns) {
+    return columns.stream().map(column -> {
+      final int index = column.getIndex();
+      final String fieldType = column.getMysqlType();
+      final String name = column.getName();
+      final boolean pk = column.getIsKey();
+      Field field = new Field();
+      return field.setFieldType(fieldType).setPk(pk).setIndex(index).setName(name);
+    }).collect(Collectors.toList());
+  }
+
+  private List<FieldItem> convert2Data(final List<CanalEntry.Column> columns) {
+    return columns.stream().map(column -> {
+      final int index = column.getIndex();
+      final String value = column.getValue();
+      final String name = column.getName();
+      return new FieldItem().setIndex(index).setName(name).setValue(value);
+    }).collect(Collectors.toList());
   }
 
 

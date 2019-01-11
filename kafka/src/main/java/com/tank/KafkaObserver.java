@@ -33,6 +33,10 @@ public class KafkaObserver implements Observer {
       DbRecord dbRecord = (DbRecord) data;
       final String topic = dbRecord.getDb();
       final String josnStr = dbRecord.toString();
+      Objects.requireNonNull(dbRecord.getDb());
+      Objects.requireNonNull(dbRecord.getOp());
+      Objects.requireNonNull(topic);
+
       log.info("kafka observer receive data, {}" + josnStr);
     } else {
       throw new RuntimeException("not support such type");
