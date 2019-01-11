@@ -2,8 +2,6 @@ package com.tank.util;
 
 import redis.clients.jedis.Jedis;
 
-import java.util.function.Function;
-
 /**
  * @author fuchun
  */
@@ -14,14 +12,26 @@ public class RedisUniqueKey {
     return Single.INSTANCE.createInstance();
   }
 
+  public long fetchUniqueKey() {
 
-  public long fetchUniqueKey(final Function<Jedis, Long> fun) {
     try (Jedis jedis = this.singleRedisTool.getJedisPool().getResource()) {
-      return fun.apply(jedis);
+      boolean isOk = jedis.exists("seq");
+      if (!isOk) {
+        jedis.set("seq", "1");
+        return 1L;
+      } else {
+        boolean isMax = Long.MAX_VALUE == Long.parseLong(jedis.get("seq"));
+        if (isMax) {
+          jedis.set("seq", "1");
+          return 1L;
+        }
+        return jedis.incr("seq");
+      }
+
     } catch (Exception e) {
       e.printStackTrace();
     }
-    return 0L;
+    return -1L;
   }
 
 
@@ -47,4 +57,5 @@ public class RedisUniqueKey {
   }
 
   private SingleRedisTool singleRedisTool = SingleRedisTool.createRedisTool();
+
 }

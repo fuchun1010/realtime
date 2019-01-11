@@ -16,22 +16,7 @@ public class RedisUniqueKeySpec {
 
   @Test
   public void testUniqueKey() {
-    Long rs = this.redisUniqueKey.fetchUniqueKey(jedis -> {
-      boolean isOk = jedis.exists("seq");
-      if (!isOk) {
-        jedis.set("seq", "1");
-        return 1L;
-      } else {
-
-        boolean isMax = maxValue.compareAndSet(Long.parseLong(jedis.get("seq")), 0);
-        if (isMax) {
-          jedis.set("seq", "1");
-          return 1L;
-        }
-        return jedis.incr("seq");
-      }
-    });
-
+    Long rs = this.redisUniqueKey.fetchUniqueKey();
     Assert.assertEquals(rs.longValue(), 1L);
   }
 

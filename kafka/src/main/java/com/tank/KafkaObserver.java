@@ -2,6 +2,7 @@ package com.tank;
 
 import com.tank.domain.DbRecord;
 import com.tank.procedure.SimpleProducer;
+import com.tank.util.RedisUniqueKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -15,13 +16,14 @@ public class KafkaObserver implements Observer {
 
   public KafkaObserver(final Map<String, String> config) {
     Objects.nonNull(config);
+
     final Properties props = new Properties();
     for (Map.Entry<String, String> pair : config.entrySet()) {
       final String key = pair.getKey();
       final String value = pair.getValue();
       props.putIfAbsent(key, value);
     }
-    this.producer = new SimpleProducer<Integer, String>(props, true);
+    this.producer = new SimpleProducer<Long, String>(props, true);
   }
 
   @Override
@@ -38,7 +40,8 @@ public class KafkaObserver implements Observer {
       Objects.requireNonNull(topic);
 
       log.info("kafka observer receive data, {}", josnStr);
-      this.producer.send(topic, Objects.hash(topic + josnStr), josnStr);
+      final long seq = redisUniqueKey.fetchUniqueKey();
+      this.producer.send(topic, seq, josnStr);
 
     } else {
       throw new RuntimeException("not support such type");
@@ -50,7 +53,9 @@ public class KafkaObserver implements Observer {
     this.producer.close();
   }
 
-  private SimpleProducer<Integer, String> producer;
+  private SimpleProducer<Long, String> producer;
+
+  private RedisUniqueKey redisUniqueKey = RedisUniqueKey.createInstance();
 
 
 }
