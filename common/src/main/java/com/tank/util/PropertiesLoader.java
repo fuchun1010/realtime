@@ -31,7 +31,7 @@ public class PropertiesLoader {
       throw new RuntimeException("file name is empty");
     }
     final Map<String, String> config = Maps.newConcurrentMap();
-    final String rootPath = System.getProperty("user.dir");
+    final String rootPath = new File(System.getProperty("user.dir")).getParentFile().getAbsolutePath();
     final String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
     final File file = new File(targetPath);
     if (!file.exists()) {
@@ -44,7 +44,10 @@ public class PropertiesLoader {
       while (keys.hasMoreElements()) {
         final String key = keys.nextElement();
         final String value = props.getProperty(key);
-        config.putIfAbsent(key, value);
+        if (Objects.nonNull(value) && value.length() > 0) {
+          config.putIfAbsent(key, value);
+        }
+
       }
     }
     return config;
