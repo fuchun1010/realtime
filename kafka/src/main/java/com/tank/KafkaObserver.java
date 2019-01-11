@@ -37,7 +37,9 @@ public class KafkaObserver implements Observer {
       Objects.requireNonNull(dbRecord.getOp());
       Objects.requireNonNull(topic);
 
-      log.info("kafka observer receive data, {}" + josnStr);
+      log.info("kafka observer receive data, {}", josnStr);
+      this.producer.send(topic, Objects.hash(topic + josnStr), josnStr);
+
     } else {
       throw new RuntimeException("not support such type");
     }
@@ -49,4 +51,6 @@ public class KafkaObserver implements Observer {
   }
 
   private SimpleProducer<Integer, String> producer;
+
+
 }
