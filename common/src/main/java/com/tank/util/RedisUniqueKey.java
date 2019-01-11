@@ -2,6 +2,8 @@ package com.tank.util;
 
 import redis.clients.jedis.Jedis;
 
+import java.util.Map;
+
 /**
  * @author fuchun
  */
@@ -15,6 +17,8 @@ public class RedisUniqueKey {
   public long fetchUniqueKey() {
 
     try (Jedis jedis = this.singleRedisTool.getJedisPool().getResource()) {
+      final int index = Integer.parseInt(this.redisConf.get("index"));
+      jedis.select(index);
       boolean isOk = jedis.exists("seq");
       if (!isOk) {
         jedis.set("seq", "1");
@@ -53,9 +57,17 @@ public class RedisUniqueKey {
 
 
   private RedisUniqueKey() {
-
+    try {
+      this.redisConf = propertiesLoader.loadConfig("redis.properties");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   private SingleRedisTool singleRedisTool = SingleRedisTool.createRedisTool();
+
+  private PropertiesLoader propertiesLoader = PropertiesLoader.createInstance();
+
+  private Map<String, String> redisConf = null;
 
 }
