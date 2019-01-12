@@ -41,6 +41,9 @@ public class KafkaObserver implements Observer {
 
       log.info("kafka observer receive data, {}", josnStr);
       final long seq = redisUniqueKey.fetchUniqueKey();
+      if (seq == -1) {
+        throw new IllegalArgumentException("redis auto increment error");
+      }
       dbRecord.setSeq(seq);
       this.producer.send(topic, seq, josnStr);
 

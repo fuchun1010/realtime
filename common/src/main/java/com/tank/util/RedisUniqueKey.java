@@ -1,5 +1,6 @@
 package com.tank.util;
 
+import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.Jedis;
 
 import java.util.Map;
@@ -7,8 +8,8 @@ import java.util.Map;
 /**
  * @author fuchun
  */
+@Slf4j
 public class RedisUniqueKey {
-
 
   public static RedisUniqueKey createInstance() {
     return Single.INSTANCE.createInstance();
@@ -33,6 +34,7 @@ public class RedisUniqueKey {
       }
 
     } catch (Exception e) {
+      log.info("generate auto increment key error: {}", e.getMessage());
       e.printStackTrace();
     }
     return -1L;
