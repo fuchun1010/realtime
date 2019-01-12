@@ -1,5 +1,6 @@
 package com.tank;
 
+import com.google.common.base.Preconditions;
 import com.tank.domain.DbRecord;
 import com.tank.procedure.SimpleProducer;
 import com.tank.util.RedisUniqueKey;
@@ -41,9 +42,7 @@ public class KafkaObserver implements Observer {
 
       log.info("kafka observer receive data, {}", josnStr);
       final long seq = redisUniqueKey.fetchUniqueKey();
-      if (seq == -1) {
-        throw new IllegalArgumentException("redis auto increment error");
-      }
+      Preconditions.checkArgument(seq != -1);
       dbRecord.setSeq(seq);
       this.producer.send(topic, seq, josnStr);
 
