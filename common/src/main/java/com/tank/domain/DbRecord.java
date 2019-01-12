@@ -22,6 +22,8 @@ public class DbRecord {
 
   private List<FieldItem> data = Lists.newLinkedList();
 
+  private long seq;
+
   @Override
   public String toString() {
     return JSONObject.toJSONString(this);
