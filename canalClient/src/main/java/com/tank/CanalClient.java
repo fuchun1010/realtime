@@ -5,7 +5,9 @@ import com.tank.util.PropertiesLoader;
 import com.tank.util.ZkLock;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,7 +18,7 @@ import java.util.concurrent.Executors;
 public class CanalClient {
 
   public static void main(String[] args) throws Exception {
-
+    log.info("main");
     final PropertiesLoader propertiesLoader = PropertiesLoader.createInstance();
     final Map<String, String> mysqlConfig = propertiesLoader.loadConfig("mysql.properties");
     final Map<String, String> zkConfig = propertiesLoader.loadConfig("zk.properties");
@@ -25,7 +27,8 @@ public class CanalClient {
     final String destination = mysqlConfig.get("target_db");
     final String username = mysqlConfig.get("username");
     final String password = mysqlConfig.get("password");
-    final String zkServers = zkConfig.get("zk.urls");
+
+    Arrays.<String>asList(ip, destination, username, password).forEach(Objects::requireNonNull);
 
     /**
      * 分布式运行锁
@@ -34,14 +37,15 @@ public class CanalClient {
     zkLock.tryAcquire();
 
     final CanalExtractor canalExtractor = new CanalExtractor(ip, destination, username, password);
-
     final ExecutorService service = Executors.newSingleThreadExecutor();
     service.execute(canalExtractor);
+
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("close some resource after shutdown Canal client");
       canalExtractor.stop();
       service.shutdown();
       System.out.println("...over...");
     }));
+
   }
 }

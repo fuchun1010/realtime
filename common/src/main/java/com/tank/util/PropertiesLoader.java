@@ -31,7 +31,7 @@ public class PropertiesLoader {
       throw new RuntimeException("file name is empty");
     }
     final Map<String, String> config = Maps.newConcurrentMap();
-    final String rootPath = new File(System.getProperty("user.dir")).getParentFile().getAbsolutePath();
+    final String rootPath = new File(System.getProperty("user.dir")).getAbsolutePath();
     final String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
     final File file = new File(targetPath);
     if (!file.exists()) {
