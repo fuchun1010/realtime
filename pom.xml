@@ -19,6 +19,11 @@
         <fastjson-version>1.2.54</fastjson-version>
         <curator-version>4.0.1</curator-version>
         <zookeeper-version>3.4.13</zookeeper-version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+        <file.encoding>UTF-8</file.encoding>
+        <maven.compile.encoding>UTF-8</maven.compile.encoding>
     </properties>
 
     <dependencies>
