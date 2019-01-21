@@ -1,8 +1,12 @@
 realtime.iml
+
 .idea/
+
 canalClient/target
 canalClient/canalClient.iml
+
 common/common.iml
-common/target/
+common/target
+
 kafka/kafka.iml
 kafka/target/
