@@ -17,6 +17,7 @@ public class RedisUniqueKeySpec {
   @Test
   public void testUniqueKey() {
     Long rs = this.redisUniqueKey.fetchUniqueKey();
+    Assert.assertTrue(rs > 1L);
     Assert.assertEquals(rs.longValue(), 1L);
   }
 

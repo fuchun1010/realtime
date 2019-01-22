@@ -1,0 +1,5 @@
+2019-01-22 15:44:21.175 [ main ] - [ INFO  ] [ com.tank.util.RedisUniqueKey : 37 ] - generate auto increment key error: null
+2019-01-22 15:44:41.402 [ main ] - [ INFO  ] [ com.tank.util.RedisUniqueKey : 37 ] - generate auto increment key error: null
+2019-01-22 15:45:00.489 [ main ] - [ INFO  ] [ com.tank.util.RedisUniqueKey : 37 ] - generate auto increment key error: null
+2019-01-22 15:46:32.728 [ main ] - [ INFO  ] [ com.tank.util.RedisUniqueKey : 37 ] - generate auto increment key error: null
+2019-01-22 15:49:25.708 [ main ] - [ INFO  ] [ com.tank.util.RedisUniqueKey : 37 ] - generate auto increment key error: null

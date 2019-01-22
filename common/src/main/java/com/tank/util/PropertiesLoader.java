@@ -5,7 +5,10 @@ import com.google.common.collect.Maps;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * @author fuchun
@@ -31,11 +34,13 @@ public class PropertiesLoader {
       throw new RuntimeException("file name is empty");
     }
     final Map<String, String> config = Maps.newConcurrentMap();
-    final String rootPath = new File(System.getProperty("user.dir")).getAbsolutePath();
-    final String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
-    final File file = new File(targetPath);
+    String rootPath = new File(System.getProperty("user.dir")).getAbsolutePath();
+    String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
+    File file = new File(targetPath);
     if (!file.exists()) {
-      throw new NoSuchElementException(fileName + " not exists");
+      rootPath = new File(System.getProperty("user.dir")).getParent();
+      targetPath = rootPath + File.separator + "config" + File.separator + fileName;
+      file = new File(targetPath);
     }
     try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
       final Properties props = new Properties();

@@ -34,16 +34,19 @@ public class KafkaObserver implements Observer {
 
     if (data instanceof DbRecord) {
       DbRecord dbRecord = (DbRecord) data;
+
       final String topic = dbRecord.getDb();
+      final long seq = redisUniqueKey.fetchUniqueKey();
+      dbRecord.setSeq(seq);
       final String josnStr = dbRecord.toString();
       Objects.requireNonNull(dbRecord.getDb());
       Objects.requireNonNull(dbRecord.getOp());
       Objects.requireNonNull(topic);
 
       log.info("kafka observer receive data, {}", josnStr);
-      final long seq = redisUniqueKey.fetchUniqueKey();
+
       Preconditions.checkArgument(seq != -1);
-      dbRecord.setSeq(seq);
+
       this.producer.send(topic, seq, josnStr);
 
     } else {
