@@ -1,5 +1,17 @@
 # realtime
 
+#### tips
+
+* start mysql with binlog formatter
+
+* start canal
+
+* start zookeeper
+
+* start kafka
+
+* check port 3306 11111 9092 accessible
+
 
 #### insert
 ```
