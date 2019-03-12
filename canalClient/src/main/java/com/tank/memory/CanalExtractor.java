@@ -46,7 +46,7 @@ public class CanalExtractor implements Runnable {
     CrudRecord crudRecord = new CrudRecord();
 
 //    try {
-//      final Map<String, String> kafkaConfig = this.propertiesLoader.loadConfig("kafka.properties");
+//      final Map<String, String> kafkaConfig = this.propertiesLoader.producerProps();
 //      this.kafkaObserver = new KafkaObserver(kafkaConfig);
 //
 //      crudRecord.addObserver(kafkaObserver);

@@ -1,14 +1,10 @@
 package com.tank.util;
 
-import com.google.common.collect.Maps;
+import com.tank.util.config.ConfigReader;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
+
+import static org.apache.kafka.clients.producer.ProducerConfig.*;
 
 /**
  * @author fuchun
@@ -20,42 +16,27 @@ public class PropertiesLoader {
     return Single.INSTANCE.propertiesLoader;
   }
 
-
   /**
-   * 根据配置文件名称加载数据
+   * 生产者Props
    *
-   * @param fileName
    * @return
    * @throws Exception
    */
-  public Map<String, String> loadConfig(final String fileName) throws Exception {
-    Objects.requireNonNull(fileName);
-    if (fileName.length() == 0) {
-      throw new RuntimeException("file name is empty");
-    }
-    final Map<String, String> config = Maps.newConcurrentMap();
-    String rootPath = new File(System.getProperty("user.dir")).getAbsolutePath();
-    String targetPath = rootPath + File.separator + "config" + File.separator + fileName;
-    File file = new File(targetPath);
-    if (!file.exists()) {
-      rootPath = new File(System.getProperty("user.dir")).getParent();
-      targetPath = rootPath + File.separator + "config" + File.separator + fileName;
-      file = new File(targetPath);
-    }
-    try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
-      final Properties props = new Properties();
-      props.load(in);
-      final Enumeration<String> keys = (Enumeration<String>) props.propertyNames();
-      while (keys.hasMoreElements()) {
-        final String key = keys.nextElement();
-        final String value = props.getProperty(key);
-        if (Objects.nonNull(value) && value.length() > 0) {
-          config.putIfAbsent(key, value);
-        }
+  public Properties producerProps() {
 
-      }
-    }
-    return config;
+    Properties props = new Properties();
+    String servers = this.configReader.value(this.prefix + "bootstrap.servers", (k, c) -> c.getString(k));
+    String keySeria = this.configReader.value(this.prefix + "key.serializer", (k, c) -> c.getString(k));
+    String valueSeria = this.configReader.value(this.prefix + "value.serializer", (k, c) -> c.getString(k));
+    String ack = this.configReader.value(this.prefix + "acks", (k, c) -> c.getString(k));
+    String clientId = this.configReader.value(this.prefix + "client.id", (k, c) -> c.getString(k));
+    props.put(BOOTSTRAP_SERVERS_CONFIG, servers);
+    props.put(ACKS_CONFIG, ack);
+    props.put(RETRIES_CONFIG, 0);
+    props.put(VALUE_SERIALIZER_CLASS_CONFIG, keySeria);
+    props.put(KEY_SERIALIZER_CLASS_CONFIG, valueSeria);
+    props.put(CLIENT_ID_CONFIG, clientId);
+    return props;
   }
 
 
@@ -77,5 +58,9 @@ public class PropertiesLoader {
   private PropertiesLoader() {
 
   }
+
+  private ConfigReader configReader = ConfigReader.readerInstance();
+
+  private String prefix = "kafka.producer.";
 
 }

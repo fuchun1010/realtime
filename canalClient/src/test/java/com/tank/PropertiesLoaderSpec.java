@@ -5,8 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.Properties;
 
 /**
  * @author fuchun
@@ -20,14 +19,9 @@ public class PropertiesLoaderSpec {
   }
 
   @Test
-  public void testLoadConfig() {
-    try {
-      final Map<String, String> config = this.propertiesLoader.loadConfig("zk.properties");
-      Assert.assertTrue(Objects.nonNull(config));
-      Assert.assertTrue(config.size() > 0);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public void testProducerProps() {
+    Properties props = this.propertiesLoader.producerProps();
+    Assert.assertTrue(props.getProperty("bootstrap.servers").equalsIgnoreCase("localhost:9092"));
   }
 
   private PropertiesLoader propertiesLoader = null;
