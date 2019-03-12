@@ -1,5 +1,6 @@
 package com.tank.util;
 
+import com.tank.util.config.ConfigReader;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -8,7 +9,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -77,16 +77,13 @@ public class ZkLock {
     this.latch = new CountDownLatch(1);
     final int threadNum = 1;
     this.service = Executors.newSingleThreadExecutor();
-    final PropertiesLoader propertiesLoader = PropertiesLoader.createInstance();
-    Map<String, String> zkServerProps;
-    Map<String, String> serverProps;
+    ConfigReader configReader = ConfigReader.readerInstance();
     try {
-      zkServerProps = propertiesLoader.loadConfig("zk.properties");
-      serverProps = propertiesLoader.loadConfig("server.properties");
+
       this.retryPolicy = new ExponentialBackoffRetry(500, Integer.MAX_VALUE);
-      this.zkUrls = zkServerProps.get("zk.urls");
-      this.serverName = serverProps.get("server.name");
-      this.appNode = serverProps.get("server.app");
+      this.zkUrls = configReader.<String>value("zk.urls", (k, c) -> c.getString(k));
+      this.serverName = configReader.<String>value("server.name", (k, c) -> c.getString(k));
+      this.appNode = configReader.value("server.app", (k, c) -> c.getString(k));
     } catch (Exception e) {
       e.printStackTrace();
     }

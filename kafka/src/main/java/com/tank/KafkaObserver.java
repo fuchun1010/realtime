@@ -1,9 +1,7 @@
 package com.tank;
 
-import com.google.common.base.Preconditions;
 import com.tank.domain.DbRecord;
 import com.tank.procedure.SimpleProducer;
-import com.tank.util.RedisUniqueKey;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -36,8 +34,7 @@ public class KafkaObserver implements Observer {
       DbRecord dbRecord = (DbRecord) data;
 
       final String topic = dbRecord.getDb();
-      final long seq = redisUniqueKey.fetchUniqueKey();
-      dbRecord.setSeq(seq);
+
       final String josnStr = dbRecord.toString();
       Objects.requireNonNull(dbRecord.getDb());
       Objects.requireNonNull(dbRecord.getOp());
@@ -45,9 +42,8 @@ public class KafkaObserver implements Observer {
 
       log.info("kafka observer receive data, {}", josnStr);
 
-      Preconditions.checkArgument(seq != -1);
 
-      this.producer.send(topic, seq, josnStr);
+      //this.producer.send(topic, seq, josnStr);
 
     } else {
       throw new RuntimeException("not support such type");
@@ -61,7 +57,6 @@ public class KafkaObserver implements Observer {
 
   private SimpleProducer<Long, String> producer;
 
-  private RedisUniqueKey redisUniqueKey = RedisUniqueKey.createInstance();
 
 
 }

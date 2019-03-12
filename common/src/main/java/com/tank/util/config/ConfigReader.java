@@ -17,6 +17,10 @@ public class ConfigReader {
     return configLoader.loadConfig(key, config);
   }
 
+  public static ConfigReader readerInstance() {
+    return Single.INSTANCE.configReader;
+  }
+
   enum Single {
     INSTANCE;
 
@@ -24,6 +28,7 @@ public class ConfigReader {
       File path;
       try {
         path = ConfigFile.configPath();
+        this.configReader = new ConfigReader();
         this.config = ConfigFactory.parseFile(path);
       } catch (FileNotFoundException e) {
         e.printStackTrace();
@@ -33,11 +38,20 @@ public class ConfigReader {
 
     public Config fetchConfig() {
       Preconditions.checkArgument(this.config != null);
-
       return this.config;
     }
 
+    public ConfigReader fetchReader() {
+      return this.configReader;
+    }
+
     private Config config;
+
+    private ConfigReader configReader;
+  }
+
+  private ConfigReader() {
+
   }
 
 }

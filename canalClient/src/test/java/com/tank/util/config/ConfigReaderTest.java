@@ -8,7 +8,7 @@ public class ConfigReaderTest {
 
   @Before
   public void init() {
-    this.configReader = new ConfigReader();
+    this.configReader = ConfigReader.readerInstance();
   }
 
   @Test
@@ -17,8 +17,8 @@ public class ConfigReaderTest {
     String db = this.configReader.<String>value("mysql.target_db", (key, config) -> config.getString(key));
     String username = this.configReader.<String>value("mysql.username", (k, c) -> c.getString(k));
     String password = this.configReader.value("mysql.password", (k, c) -> c.getString(k));
-    Assert.assertTrue(ip.equalsIgnoreCase("192.168.0.112"));
-    Assert.assertTrue(db.equalsIgnoreCase("demo2"));
+    Assert.assertTrue(ip.equalsIgnoreCase("111.230.150.171"));
+    Assert.assertTrue(db.equalsIgnoreCase("demo"));
     Assert.assertTrue(username.equalsIgnoreCase("canal"));
     Assert.assertTrue(password.equalsIgnoreCase("canal"));
 
@@ -27,7 +27,7 @@ public class ConfigReaderTest {
     String serverName = this.configReader.<String>value("kafka.producer.client.id", (k, c) -> c.getString(k));
     Integer retries = this.configReader.value("kafka.producer.retries", (k, c) -> c.getInt(k));
     Assert.assertTrue(acks.equalsIgnoreCase("all"));
-    Assert.assertTrue(servers.equalsIgnoreCase("192.168.0.112:9092"));
+    Assert.assertTrue(servers.equalsIgnoreCase("localhost:9092"));
     Assert.assertTrue(serverName.equalsIgnoreCase("A"));
     Assert.assertTrue(retries == 5);
   }

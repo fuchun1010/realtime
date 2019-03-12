@@ -1,12 +1,10 @@
 package com.tank;
 
 import com.tank.memory.CanalExtractor;
-import com.tank.util.PropertiesLoader;
-import com.tank.util.ZkLock;
+import com.tank.util.config.ConfigReader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,24 +17,23 @@ public class CanalClient {
 
   public static void main(String[] args) throws Exception {
     log.info("main");
-    final PropertiesLoader propertiesLoader = PropertiesLoader.createInstance();
-    final Map<String, String> mysqlConfig = propertiesLoader.loadConfig("mysql.properties");
-    final Map<String, String> zkConfig = propertiesLoader.loadConfig("zk.properties");
+    final ConfigReader configReader = ConfigReader.readerInstance();
 
-    final String ip = mysqlConfig.get("server_address");
-    final String destination = mysqlConfig.get("target_db");
-    final String username = mysqlConfig.get("username");
-    final String password = mysqlConfig.get("password");
+    final String ip = configReader.<String>value("canal.server_address", (key, config) -> config.getString(key));
+    final String destination = configReader.<String>value("mysql.target_db", (key, config) -> config.getString(key));
+    final String username = configReader.<String>value("mysql.username", (k, c) -> c.getString(k));
+    final String password = configReader.<String>value("mysql.password", (k, c) -> c.getString(k));
+    final Integer port = configReader.<Integer>value("canal.port", (k, c) -> c.getInt(k));
 
-    Arrays.<String>asList(ip, destination, username, password).forEach(Objects::requireNonNull);
+    Arrays.<Object>asList(ip, destination, username, password, port).forEach(Objects::requireNonNull);
 
     /**
      * 分布式运行锁
      */
-    ZkLock zkLock = ZkLock.buildInstance();
-    zkLock.tryAcquire();
+//    ZkLock zkLock = ZkLock.buildInstance();
+//    zkLock.tryAcquire();
 
-    final CanalExtractor canalExtractor = new CanalExtractor(ip, destination, username, password);
+    final CanalExtractor canalExtractor = new CanalExtractor(ip, destination, username, password, port);
     final ExecutorService service = Executors.newSingleThreadExecutor();
     service.execute(canalExtractor);
 

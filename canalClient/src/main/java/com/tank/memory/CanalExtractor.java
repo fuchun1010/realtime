@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -29,12 +28,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CanalExtractor implements Runnable {
 
-  public CanalExtractor(@Nonnull final String ip, final String destination, final String username, final String password) {
-    final int port = 11111;
+  public CanalExtractor(@Nonnull final String ip, final String destination, final String username, final String password, final int port) {
     this.destination = destination;
     final InetSocketAddress socketAddress = new InetSocketAddress(ip, port);
     this.canalConnector = CanalConnectors.newSingleConnector(socketAddress, destination, username, password);
-    log.info("*********single canal start listen mysql crud*********");
+    log.info("connect canal successfully, ip is: {}, port is :{}", ip, port);
   }
 
 
@@ -47,14 +45,14 @@ public class CanalExtractor implements Runnable {
     // register all consumer type: kafka,redis and so on
     CrudRecord crudRecord = new CrudRecord();
 
-    try {
-      final Map<String, String> kafkaConfig = this.propertiesLoader.loadConfig("kafka.properties");
-      this.kafkaObserver = new KafkaObserver(kafkaConfig);
-
-      crudRecord.addObserver(kafkaObserver);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+//    try {
+//      final Map<String, String> kafkaConfig = this.propertiesLoader.loadConfig("kafka.properties");
+//      this.kafkaObserver = new KafkaObserver(kafkaConfig);
+//
+//      crudRecord.addObserver(kafkaObserver);
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
 
     while (isRunning) {
 
