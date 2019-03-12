@@ -8,10 +8,12 @@ import com.alibaba.otter.canal.protocol.CanalEntry.EventType;
 import com.alibaba.otter.canal.protocol.CanalEntry.RowChange;
 import com.alibaba.otter.canal.protocol.Message;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.googlecode.protobuf.format.JsonFormat;
 import com.tank.KafkaObserver;
 import com.tank.domain.DbRecord;
 import com.tank.domain.Field;
 import com.tank.domain.FieldItem;
+import com.tank.proto.RecordMsg;
 import com.tank.sink.CrudRecord;
 import com.tank.util.PropertiesLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.tank.proto.RecordMsg.Record.Operator.*;
 
 /**
  * @author fuchun
@@ -97,18 +101,26 @@ public class CanalExtractor implements Runnable {
 
       for (CanalEntry.RowData row : rowChange.getRowDatasList()) {
 
+        RecordMsg.Record.Builder recordBuilder = RecordMsg.Record.newBuilder();
+        String dbName = header.getSchemaName();
+        recordBuilder.setDb(dbName);
+        recordBuilder.setTableName(tableName);
+
         final DbRecord dbRecord = new DbRecord();
         dbRecord.setDb(header.getSchemaName());
         dbRecord.setTableName(tableName);
 
         if (eventType == EventType.DELETE) {
           dbRecord.setOp("delete");
+          recordBuilder.setOp(DELETE);
           columns = row.getBeforeColumnsList();
         } else {
           if (eventType == EventType.UPDATE) {
             dbRecord.setOp("update");
+            recordBuilder.setOp(UPDATE);
           } else {
             dbRecord.setOp("insert");
+            recordBuilder.setOp(INSERT);
           }
           columns = row.getAfterColumnsList();
         }
@@ -117,8 +129,14 @@ public class CanalExtractor implements Runnable {
         dbRecord.getSchema().setFields(fields);
         dbRecord.setData(data);
 
+        recordBuilder.addAllSchema(this.convert2Schema(columns));
+        recordBuilder.addAllData(this.convert2RowData(columns));
+
+        RecordMsg.Record record = recordBuilder.build();
+        log.info("json size = {} ", JsonFormat.printToString(record).getBytes().length);
+        log.info("proto size = {}", record.toByteArray().length);
         // notify all observers
-        crudRecord.changeData(dbRecord);
+        // crudRecord.changeData(dbRecord);
 
       }
 
@@ -135,6 +153,37 @@ public class CanalExtractor implements Runnable {
     if (Objects.nonNull(this.kafkaObserver)) {
       this.kafkaObserver.close();
     }
+  }
+
+  private List<RecordMsg.Record.Schema> convert2Schema(final List<CanalEntry.Column> columns) {
+    return columns.stream().map(column -> {
+      final int index = column.getIndex();
+      final String fieldType = column.getMysqlType();
+      RecordMsg.Record.DataType dataType = RecordMsg.Record.DataType.INT;
+      if (fieldType.indexOf("int") != -1) {
+        dataType = RecordMsg.Record.DataType.INT;
+      } else if (fieldType.indexOf("varchar") != -1) {
+        dataType = RecordMsg.Record.DataType.TEXT;
+      } else if (fieldType.indexOf("decimal") != -1) {
+        dataType = RecordMsg.Record.DataType.DECIMAL;
+      } else {
+        dataType = RecordMsg.Record.DataType.DATE;
+      }
+      final String name = column.getName();
+      final boolean pk = column.getIsKey();
+      RecordMsg.Record.Schema.Builder schemaBuilder = RecordMsg.Record.Schema.newBuilder();
+      return schemaBuilder.setPk(pk).setFieldType(dataType).setIndex(index).setName(name).build();
+    }).collect(Collectors.toList());
+  }
+
+  private List<RecordMsg.Record.Data> convert2RowData(final List<CanalEntry.Column> columns) {
+    return columns.stream().map(column -> {
+      final int index = column.getIndex();
+      final String value = column.getValue();
+      final String name = column.getName();
+      RecordMsg.Record.Data.Builder dataBuilder = RecordMsg.Record.Data.newBuilder();
+      return dataBuilder.setIndex(index).setValue(value).setName(name).build();
+    }).collect(Collectors.toList());
   }
 
   private List<Field> convert2Fields(final List<CanalEntry.Column> columns) {
@@ -156,7 +205,6 @@ public class CanalExtractor implements Runnable {
       return new FieldItem().setIndex(index).setName(name).setValue(value);
     }).collect(Collectors.toList());
   }
-
 
   private CanalConnector canalConnector = null;
 

@@ -1,10 +1,16 @@
 package com.tank;
 
+import com.google.common.base.Preconditions;
 import com.tank.domain.DbRecord;
-import com.tank.procedure.SimpleProducer;
+import com.tank.util.PropertiesLoader;
+import com.tank.util.config.ConfigReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Properties;
 
 /**
  * @author fuchun
@@ -13,22 +19,20 @@ import java.util.*;
 @Slf4j
 public class KafkaObserver implements Observer {
 
-  public KafkaObserver(final Map<String, String> config) {
-    Objects.nonNull(config);
+  public KafkaObserver() {
+    Properties props = PropertiesLoader.createInstance().producerProps();
+    this.producer = new KafkaProducer<Integer, Byte[]>(props);
+    this.topic = this.configReader.value("kafka.topic", (k, c) -> c.getString(k));
+    this.parititionNums = this.configReader.value("kafka.paritionNums", (k, c) -> c.getInt(k));
 
-    final Properties props = new Properties();
-    for (Map.Entry<String, String> pair : config.entrySet()) {
-      final String key = pair.getKey();
-      final String value = pair.getValue();
-      props.putIfAbsent(key, value);
-    }
-    this.producer = new SimpleProducer<Long, String>(props, true);
   }
 
   @Override
   public void update(Observable observable, Object data) {
     Objects.nonNull(this.producer);
     Objects.nonNull(data);
+    Objects.nonNull(this.topic);
+    Preconditions.checkArgument(this.parititionNums > 0);
 
     if (data instanceof DbRecord) {
       DbRecord dbRecord = (DbRecord) data;
@@ -42,7 +46,6 @@ public class KafkaObserver implements Observer {
 
       log.info("kafka observer receive data, {}", josnStr);
 
-
       //this.producer.send(topic, seq, josnStr);
 
     } else {
@@ -55,8 +58,13 @@ public class KafkaObserver implements Observer {
     this.producer.close();
   }
 
-  private SimpleProducer<Long, String> producer;
+  private KafkaProducer<Integer, Byte[]> producer;
 
+  private String topic;
+
+  private int parititionNums = 0;
+
+  private ConfigReader configReader = ConfigReader.readerInstance();
 
 
 }

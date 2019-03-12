@@ -41,7 +41,7 @@ public class CanalClient {
       log.info("close some resource after shutdown Canal client");
       canalExtractor.stop();
       service.shutdown();
-      System.out.println("...over...");
+      System.out.println("...clean source...");
     }));
 
   }
