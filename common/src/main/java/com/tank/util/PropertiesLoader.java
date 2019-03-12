@@ -30,9 +30,10 @@ public class PropertiesLoader {
     String valueSeria = this.configReader.value(this.prefix + "value.serializer", (k, c) -> c.getString(k));
     String ack = this.configReader.value(this.prefix + "acks", (k, c) -> c.getString(k));
     String clientId = this.configReader.value(this.prefix + "client.id", (k, c) -> c.getString(k));
+    int retries = this.configReader.<Integer>value(this.prefix + "retries", (k, c) -> c.getInt(k));
     props.put(BOOTSTRAP_SERVERS_CONFIG, servers);
     props.put(ACKS_CONFIG, ack);
-    props.put(RETRIES_CONFIG, 0);
+    props.put(RETRIES_CONFIG, retries);
     props.put(VALUE_SERIALIZER_CLASS_CONFIG, keySeria);
     props.put(KEY_SERIALIZER_CLASS_CONFIG, valueSeria);
     props.put(CLIENT_ID_CONFIG, clientId);
